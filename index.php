@@ -7,7 +7,8 @@ $result = pg_query($conn, "CREATE TABLE IF NOT EXISTS vehicles (
     type VARCHAR(50),
     brand VARCHAR(50),
     year INT,
-    price DECIMAL(10,2)
+    price DECIMAL(10,2),
+    image_url TEXT
 )");
 
 $vehicles = pg_query($conn, "SELECT * FROM vehicles ORDER BY id DESC");
@@ -18,7 +19,7 @@ $vehicles = pg_query($conn, "SELECT * FROM vehicles ORDER BY id DESC");
 <head>
     <title>AutoVault 🚗</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 40px auto; padding: 0 20px; background: #f4f4f4; }
+        body { font-family: Arial, sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 20px; background: #f4f4f4; }
         h1 { color: #333; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
         th { background: #2c3e50; color: white; padding: 12px; }
@@ -28,6 +29,7 @@ $vehicles = pg_query($conn, "SELECT * FROM vehicles ORDER BY id DESC");
         .edit { background: #3498db; }
         .delete { background: #e74c3c; }
         .add { background: #2ecc71; padding: 10px 20px; border-radius: 6px; text-decoration: none; color: white; display: inline-block; margin-bottom: 20px; }
+        img { width: 80px; height: 60px; object-fit: cover; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -35,11 +37,12 @@ $vehicles = pg_query($conn, "SELECT * FROM vehicles ORDER BY id DESC");
     <a href="add.php" class="add">+ Add New Vehicle</a>
     <table>
         <tr>
-            <th>ID</th><th>Name</th><th>Type</th><th>Brand</th><th>Year</th><th>Price</th><th>Actions</th>
+            <th>ID</th><th>Image</th><th>Name</th><th>Type</th><th>Brand</th><th>Year</th><th>Price</th><th>Actions</th>
         </tr>
         <?php while ($row = pg_fetch_assoc($vehicles)): ?>
         <tr>
             <td><?= $row['id'] ?></td>
+            <td><?= $row['image_url'] ? '<img src="'.$row['image_url'].'">' : '🚗' ?></td>
             <td><?= $row['name'] ?></td>
             <td><?= $row['type'] ?></td>
             <td><?= $row['brand'] ?></td>

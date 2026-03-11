@@ -1,5 +1,8 @@
 <?php
 require 'db.php';
+require_once 'vendor/autoload.php';
+
+use MicrosoftAzure\Storage\Blob\BlobRestProxy;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'];
@@ -7,8 +10,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $brand = $_POST['brand'];
     $year = $_POST['year'];
     $price = $_POST['price'];
+    $image_url = '';
 
-    pg_query($conn, "INSERT INTO vehicles (name, type, brand, year, price) VALUES ('$name', '$type', '$brand', $year, $price)");
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
+        $blobClient = BlobRestProxy::createBlobService(
+            "DefaultEndpointsProtocol=https;AccountName=" . AZURE_STORAGE_ACCOUNT . ";AccountKey=" . AZURE_STORAGE_KEY . ";EndpointSuffix=core.windows.net"
+        );
+        $fileName = time() . '_' . basename($_FILES['image']['name']);
+        $fileContent = fopen($_FILES['image']['tmp_name'], 'r');
+        $blobClient->createBlockBlob(AZURE_CONTAINER, $fileName, $fileContent);
+        $image_url = "https://" . AZURE_STORAGE_ACCOUNT . ".blob.core.windows.net/" . AZURE_CONTAINER . "/" . $fileName;
+    }
+
+    pg_query($conn, "INSERT INTO vehicles (name, type, brand, year, price, image_url) VALUES ('$name', '$type', '$brand', $year, $price, '$image_url')");
     header("Location: index.php");
     exit;
 }
@@ -30,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <h1>➕ Add New Vehicle</h1>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <label>Vehicle Name</label>
         <input type="text" name="name" placeholder="e.g. Yamaha R15" required>
 
@@ -50,6 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <label>Price (₹)</label>
         <input type="number" name="price" placeholder="e.g. 150000" step="0.01" required>
+
+        <label>Vehicle Image</label>
+        <input type="file" name="image" accept="image/*">
 
         <button type="submit">Add Vehicle</button>
     </form>
